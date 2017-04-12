@@ -1,18 +1,24 @@
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+    var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+//cursors will tell the controls of the cars or objects
 var cursors;
+
+// the objects contrloed by cursors
 var car1;
 var car2;
+
+// objects that block the way
 var barriers = [];
-var intervel;
+
+// object that changes the lap number
+var finishLine;
+
+// object thats part of the finishline
+var checkPoint;
+
+// number that represents the time
 var timer;
-
-
-//class to represent bariers
-var Barrier = function (x,y, size) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-};
 
 
 function preload() {
@@ -32,13 +38,15 @@ function preload() {
 }
 
 function create() { 
+    
+    // 
+    map = game.add.sprite(0,0, 'map');
+    
     //  This creates the scoreboard
-    scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#fff' });//
-
-
+    timerText = game.add.text(16, 16, 'Score: 0' + timer, { fontSize: '32px', fill: '#fff' });//
+    
 
     //  Our player ship
-    map = game.add.sprite(0,0, 'map');
     car1 = game.add.sprite(350, 75, 'car1');
     car2 = game.add.sprite(350, 125, 'car2');
     car1.anchor.set(0.5);
@@ -48,31 +56,22 @@ function create() {
     game.physics.enable(car1, Phaser.Physics.ARCADE);
     game.physics.enable(car2, Phaser.Physics.ARCADE);
  
-    car1.body.drag.set(100);
-    car2.body.drag.set(100);
+    car1.body.drag.set(150);
+    car2.body.drag.set(150);
     car1.body.maxVelocity.set(200);
     car2.body.maxVelocity.set(200);
+    
     //  This is the collision rule
     game.world.setBounds(0, 0, 800, 600);
-    car1.body.collideWorldBounds = false;
-    car2.body.collideWorldBounds = false;
-    car1.body.setCircle(15);
-    car2.body.setCircle(15);
+    car1.body.collideWorldBounds = true;
+    car2.body.collideWorldBounds = true;
     car1.scale.setTo(2, 2);
     car2.scale.setTo(2, 2);
-    
-
+    car1.body.setCircle(15);
+    car2.body.setCircle(15);
 
     makeBarriers();
     
-    // bullets
-    //bullets = game.add.group();
-    //bullets.enableBody = true;
-    //bullets.physicsBodyType = Phaser.Physics.ARCADE;
-    //
-    //bullets.createMultiple(50, 'bullet');
-    //bullets.setAll('checkWorldBounds', true);
-    //bullets.setAll('outOfBoundsKill', true);
     
     //reset score
     //score = 0;
@@ -81,34 +80,36 @@ function create() {
 function update() {
     move();
     checkBarriersCollision();
-    scoreText.text = 'Score: ';
-   // console.log ( "Y:" + game.input.mousePointer.y);
-
-//console.log ( "X:" + game.input.mousePointer.x);
+    checkCarCollision();
+    
+    
+    // console.log ( "Y:" + game.input.mousePointer.y);
+    //console.log ( "X:" + game.input.mousePointer.x);
 
 } // end update()
 
 function move() {
     if (cursors.up.isDown)  // isDown means key was pressed
     {
-        game.physics.arcade.accelerationFromRotation(car1.rotation, 80, car1.body.acceleration);
+        game.physics.arcade.accelerationFromRotation(car1.rotation, 120, car1.body.acceleration);
     }
     else if (cursors.down.isDown)
     {   
-        game.physics.arcade.accelerationFromRotation(car1.rotation, -80, car1.body.acceleration); 
+        game.physics.arcade.accelerationFromRotation(car1.rotation, -30, car1.body.acceleration); 
     }
     else 
     {
         car1.body.acceleration.set(0);
+        car1.body.velocity;
     }
     
     if (cursors.left.isDown)
     {
-        car1.body.angularVelocity = -300;
+        car1.body.angularVelocity = -200;
     }
     else if (cursors.right.isDown)
     {
-        car1.body.angularVelocity = 300;
+        car1.body.angularVelocity = 200;
     }
     else
     {
@@ -117,11 +118,11 @@ function move() {
     //----------------------------------------------------------------------------------------------------------------------------------------
      if (wasd.w.isDown)  // isDown means key was pressed
     {
-        game.physics.arcade.accelerationFromRotation(car2.rotation, 80, car2.body.acceleration);
+        game.physics.arcade.accelerationFromRotation(car2.rotation, 120, car2.body.acceleration);
     }
     else if (wasd.s.isDown)
     {   
-        game.physics.arcade.accelerationFromRotation(car2.rotation, -80, car2.body.acceleration); 
+        game.physics.arcade.accelerationFromRotation(car2.rotation, -30, car2.body.acceleration); 
     }
     else 
     {
@@ -155,6 +156,25 @@ function checkBarriersCollision() {
             console.log("collision!");
         }
     });
+}
+
+function checkCarCollision() {
+    var collided = game.physics.arcade.collide(car1, car2);
+    if (collided) {
+        console.log("collision between cars!");
+    }
+}
+
+
+function createFinishLine() {
+    finishLine = game.add.sprite(40, 54, 'barrier'); 
+
+    finishLine.width = 15;
+    finishLine.height = 15;
+
+    //  and its physics settings
+    game.physics.enable(barrier, Phaser.Physics.ARCADE);        
+    barrier.body.moves = false;
 }
 
 
@@ -328,23 +348,23 @@ function makeBarriers() {
         [570,770],
         [600,770]
         
-                              ];
+  ];
     
     for (var i = 0; i < BARRIER_LOCATIONS.length; i++) {
         
         var barrier = game.add.sprite(BARRIER_LOCATIONS[i][1], BARRIER_LOCATIONS[i][0], 'barrier'); 
     
-        //barrier.width = ;
+        barrier.width = 10;
+        barrier.height = 10;
         
         //  and its physics settings
-        game.physics.enable(barrier, Phaser.Physics.ARCADE);
-        
+        game.physics.enable(barrier, Phaser.Physics.ARCADE);        
         barrier.body.moves = false;
+        barrier.body.setCircle(10);
+        barrier.alpha = 0;
         
-        //  This is the collision rule
-       barrier.body.setCircle(10);
-       
-       barriers.push(barrier);
+        // add barriers array
+        barriers.push(barrier);
     }
 }
 
@@ -353,12 +373,12 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-
-function startTimer() {
-    timer=0;
-    intervel = setInterval(function(){
+function startTimer() { 
+timer = 0;
+    interval = setInterval(function() {
         timer++;
-        console.log(timer);
-    }, 1000);
+        
+        timerText.text = 'Timer: ' + timer;
+    },1000);
 };
 startTimer();
